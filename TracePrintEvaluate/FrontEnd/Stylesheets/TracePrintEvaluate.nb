@@ -1,0 +1,190 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 11.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      6554,        180]
+NotebookOptionsPosition[      5861,        160]
+NotebookOutlinePosition[      6238,        176]
+CellTagsIndexPosition[      6195,        173]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[StyleData[StyleDefinitions -> "Default.nb"]],
+
+Cell[StyleData["TPE2"],
+ CellContext->Cell,
+ TemplateBoxOptions->{DisplayFunction->(TogglerBox[1, {1 -> TagBox[#, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#]], "Input"]]}]], 2 -> TagBox[#2, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#2]], "Input"]]}]]}, ImageSize -> Automatic]& )}],
+
+Cell[StyleData["TPE3"],
+ CellContext->Cell,
+ TemplateBoxOptions->{DisplayFunction->(TogglerBox[1, {1 -> TagBox[#, 
+      EventHandlerTag[{{"MouseClicked", 2} :> 
+        Block[{System`TemplateArgBox = #& }, 
+          CopyToClipboard[
+           Cell[
+            StripBoxes[
+             BoxData[#]], "Input"]]]}]], 2 -> TagBox[#2, 
+      EventHandlerTag[{{"MouseClicked", 2} :> 
+        Block[{System`TemplateArgBox = #& }, 
+          CopyToClipboard[
+           Cell[
+            StripBoxes[
+             BoxData[#2]], "Input"]]]}]], 3 -> TagBox[#3, 
+      EventHandlerTag[{{"MouseClicked", 2} :> 
+        Block[{System`TemplateArgBox = #& }, 
+          CopyToClipboard[
+           Cell[
+            StripBoxes[
+             BoxData[#3]], "Input"]]]}]]}, ImageSize -> Automatic]& )}],
+
+Cell[StyleData["TPE4"],
+ CellContext->Cell,
+ TemplateBoxOptions->{DisplayFunction->(TogglerBox[1, {1 -> TagBox[#, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#]], "Input"]]}]], 2 -> TagBox[#2, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#2]], "Input"]]}]], 3 -> TagBox[#3, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#3]], "Input"]]}]], 4 -> TagBox[#4, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#4]], "Input"]]}]]}, ImageSize -> Automatic]& )}],
+
+Cell[StyleData["TPE5"],
+ CellContext->Cell,
+ TemplateBoxOptions->{DisplayFunction->(TogglerBox[1, {1 -> TagBox[#, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#]], "Input"]]}]], 2 -> TagBox[#2, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#2]], "Input"]]}]], 3 -> TagBox[#3, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#3]], "Input"]]}]], 4 -> TagBox[#4, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#4]], "Input"]]}]], 5 -> TagBox[#5, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#5]], "Input"]]}]]}, ImageSize -> Automatic]& )}],
+
+Cell[StyleData["TPE6"],
+ CellContext->Cell,
+ TemplateBoxOptions->{DisplayFunction->(TogglerBox[1, {1 -> TagBox[#, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#]], "Input"]]}]], 2 -> TagBox[#2, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#2]], "Input"]]}]], 3 -> TagBox[#3, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#3]], "Input"]]}]], 4 -> TagBox[#4, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#4]], "Input"]]}]], 5 -> TagBox[#5, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#5]], "Input"]]}]], 6 -> TagBox[#6, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#6]], "Input"]]}]]}, ImageSize -> Automatic]& )}],
+
+Cell[StyleData["TPE7"],
+ CellContext->Cell,
+ TemplateBoxOptions->{DisplayFunction->(TogglerBox[1, {1 -> TagBox[#, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#]], "Input"]]}]], 2 -> TagBox[#2, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#2]], "Input"]]}]], 3 -> TagBox[#3, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#3]], "Input"]]}]], 4 -> TagBox[#4, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#4]], "Input"]]}]], 5 -> TagBox[#5, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#5]], "Input"]]}]], 6 -> TagBox[#6, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#6]], "Input"]]}]], 7 -> TagBox[#7, 
+      EventHandlerTag[{{"MouseClicked", 2} -> CopyToClipboard[
+          Cell[
+           StripBoxes[
+            BoxData[#7]], "Input"]]}]]}, ImageSize -> Automatic]& )}]
+},
+WindowSize->{808, 689},
+WindowMargins->{{132, Automatic}, {16, Automatic}},
+FrontEndVersion->"11.1 for Mac OS X x86 (32-bit, 64-bit Kernel) (January 4, \
+2017)",
+StyleDefinitions->"PrivateStylesheetFormatting.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 49, 0, 36, 49, 0, "StyleData", "StyleDefinitions", ""],
+Cell[610, 22, 444, 10, 36, 23, 0, "StyleData", "TPE2", "All"],
+Cell[1057, 34, 786, 20, 36, 23, 0, "StyleData", "TPE3", "All"],
+Cell[1846, 56, 762, 18, 36, 23, 0, "StyleData", "TPE4", "All"],
+Cell[2611, 76, 921, 22, 36, 23, 0, "StyleData", "TPE5", "All"],
+Cell[3535, 100, 1080, 26, 36, 23, 0, "StyleData", "TPE6", "All"],
+Cell[4618, 128, 1239, 30, 36, 23, 0, "StyleData", "TPE7", "All"]
+}
+]
+*)
+
+(* End of internal cache information *)
+
