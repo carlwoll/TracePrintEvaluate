@@ -5,21 +5,24 @@ expressions which match \!\(\*StyleBox[\"form\", \"TI\"]\).
 TracePrintEvaluate[\!\(\*StyleBox[\"expr\", \"TI\"]\), \!\(\*StyleBox[\"s\", \"TI\"]\)] includes all evaluations which use \
 transformation rules associated with the symbol \!\(\*StyleBox[\"s\", \"TI\"]\)."
 	
-ToggleSelector::usage = "ToggleSelector[{evaluated, unevaluated..}, initial] toggles starting with initial"	
+ToggleSelector::usage = "ToggleSelector[{evaluated, unevaluated..}, initial] toggles starting with initial"
 
 Begin["`Private`"];
 	
-Options[TracePrintEvaluate]=Join[
-	FilterRules[Options[TracePrint], Except[TraceInternal|TraceAction]],
-	{
-		"TraceIn" -> None, (* Side effect function applied to input *)
-		"TraceOut" -> None, (* Side effect function applied to output *)
-		"Timing" -> False, (* Whether to show evaluation time *)
-		"Toggler" -> 1, (* Which toggler state to show initially *)
-		"StripDynamics" -> True, (* Whether to convert dynamic content to literals in the TPE output *)
-		"TraceTag" -> Automatic, (* Tag to use for TPE output *)
-		TraceInternal -> True
-	}
+Options[TracePrintEvaluate] = SortBy[
+	Join[
+		FilterRules[Options[TracePrint], Except[TraceInternal|TraceAction]],
+		{
+			"TraceIndent" -> " ",
+			"TraceIn" -> None, (* Side effect function applied to input *)
+			"TraceOut" -> None, (* Side effect function applied to input and output *)
+			"Timing" -> False, (* Whether to show evaluation time *)
+			"Toggler" -> 1, (* Which toggler state to show initially *)
+			TraceInternal -> True,
+			SaveDefinitions -> True
+		}
+	],
+	ToString[#[[1]], OutputForm]&
 ];
 	
 SetAttributes[TracePrintEvaluate, {HoldAll, ReadProtected}];
@@ -31,34 +34,21 @@ TracePrintEvaluate[expr_, form_, opts:OptionsPattern[]] := Module[
 	showtime = TrueQ@OptionValue["Timing"],
 	in = OptionValue["TraceIn"],
 	out = OptionValue["TraceOut"],
-	purge = TrueQ@OptionValue["StripDynamics"],
-	tag = Replace[OptionValue["TraceTag"], Except[_String] :> "TPE-"<>DateString[]],
-	stylesheet = CurrentValue[{StyleDefinitions, "TPE2"}] =!= {}
+	stylesheet = CurrentValue[{StyleDefinitions, "TPE2"}] =!= {},
+	indent = Replace[OptionValue["TraceIndent"], Except[_String] -> " "]
 	},
-		
-	(* What to show if a step hasn't finished evaluating *)
-	values /: MakeBoxes[_values, fmt_] := "...";
-	timing /: MakeBoxes[_timing, fmt_] := "...";
-	outAction /: MakeBoxes[_outAction, fmt_] := "...";
-		
-	(* Set CellTags for the evaluation cell so that printed cells have the tag *)
-	SetOptions[EvaluationCell[], CellTags->tag];
-	If[!purge,
-		$TraceVariables[tag] = {values, timing, start, outAction};
-		ClearAttributes[{values, timing, start, outAction}, Temporary]
-	];
-		
+
 	Block[{stack = {}},
 		With[
 			{
 			tprint = With[{v = push @ index++},
-				Print @ TPESelector[
+				Print @ ToggleSelector[
 					{
-					indented[TraceLevel[]-1, Defer@@#], (* input *)
-					visibleForm@values[v], (* output *)
-					If[showtime, timing[v], Nothing],
-					If[in=!=None, visibleForm@in[#], Nothing],
-					If[out=!=None, visibleForm@outAction[v], Nothing]
+					indented[TraceLevel[]-2, indent, Defer@@#], (* input *)
+					visibleForm @ Dynamic @ values[v], (* output *)
+					If[showtime, Dynamic @ timing[v], Nothing],
+					If[in=!=None, visibleForm @ in[#], Nothing],
+					If[out=!=None, visibleForm @ Dynamic @ outAction[v], Nothing]
 					},
 					toggle,
 					"Stylesheet" -> stylesheet
@@ -77,60 +67,57 @@ TracePrintEvaluate[expr_, form_, opts:OptionsPattern[]] := Module[
 			tsopts = FilterRules[{opts}, Options@TraceScan]
 			},
 
-			(* Main trace code *)				
-			res = TraceScan[
-				tprint,
-				expr,
-				form,
-				tset,
-				tsopts,
-				TraceInternal->OptionValue[TraceInternal]
-			];
-
-			If[purge,			
-				(* Clear evaluation cell tag *)
-				SetOptions[EvaluationCell[], CellTags->{}];
-
-				(* Select all TracePrintEvaluate cells, and clear tags *)
-				NotebookFind[
-					EvaluationNotebook[],
-					tag,
-					All,
-					CellTags,
-					AutoScroll->False
-				];
-
-				FrontEndExecute @ FrontEnd`SelectionRemoveCellTags[
-					EvaluationNotebook[],
-					tag
-				];
-
-				FrontEndExecute @ FrontEnd`NotebookDynamicToLiteral[
-					NotebookSelection @ EvaluationNotebook[]
-				];
-
-				(* Clear module variables now that their values have been 
-				 * burned into the TracePrint cells *)
-				Clear[timing, values, start, outAction];
-			];
+			(* Main trace code *)
+			r = DynamicModule[{vv, tt, oo},
+				values = vv;
+				timing = tt;
+				outAction = oo;
+				
+				(* What to show if a step hasn't finished evaluating *)
+				vv /: MakeBoxes[_vv, fmt_] := "\[Ellipsis]";
+				tt /: MakeBoxes[_tt, fmt_] := "\[Ellipsis]";
+				oo /: MakeBoxes[_oo, fmt_] := "\[Ellipsis]";
 			
-			res
+				res = TraceScan[
+					tprint,
+					expr,
+					form,
+					tset,
+					tsopts,
+					TraceInternal->OptionValue[TraceInternal]
+				];
+				
+				"\[Bullet]",
+				Initialization :> (values = vv; timing = tt; outAction = oo)
+			];
+
+			If[TrueQ @ OptionValue[SaveDefinitions],
+				CellPrint @ Cell[
+					BoxData @ ToBoxes @ res,
+					"PersistentOutput",
+					CellLabel -> "Out["<>ToString[$Line]<>"]=",
+					CellDingbat -> Cell @ BoxData @ ToBoxes @ r
+				];
+				res;,
+				
+				res
+			]
 		]
 	]
 ]
 
-Options[TPESelector] = {"Stylesheet"->True}
-TPESelector /: MakeBoxes[TPESelector[{in_, out__}, init_Integer:1, OptionsPattern[]], fmt_] := With[
+Options[ToggleSelector] = {"Stylesheet"->True}
+ToggleSelector /: MakeBoxes[ToggleSelector[{in_, out__}, init_Integer:1, OptionsPattern[]], fmt_] := With[
 	{
 	name = "TPE" <> ToString@Length[Hold[in, out]],
 	inboxes = MakeBoxes[in, fmt],
 	outboxes = ToBoxes /@ Hold[out],
-	df = If[TrueQ @ OptionValue[TPESelector, "Stylesheet"], Sequence@@{}, DisplayFunction -> TPEDisplayFunction[Length[{in, out}]]]
+	df = If[TrueQ @ OptionValue[ToggleSelector, "Stylesheet"], Sequence@@{}, DisplayFunction -> TPEDisplayFunction[Length[{in, out}]]]
 	},
 
 	Replace[
 		RotateLeft[Prepend[outboxes, inboxes], init-1],
-		Hold[x__] :> DynamicBox @ TemplateBox[{x}, name, df]
+		Hold[x__] :> TemplateBox[{x}, name, df]
 	]
 ]
 
@@ -139,7 +126,7 @@ TPEDisplayFunction[n_] := With[{toggles = Table[i -> TagBox[Slot[i], event[i]], 
 ]
 
 event[i_] := EventHandlerTag[{
-	{"MouseClicked", 2} :> Block[{System`TemplateArgBox = #&}, CopyToClipboard @ Cell[StripBoxes @ BoxData[Slot[i]], "Input"]]
+	{"MouseClicked", 2} :> Block[{System`TemplateArgBox = #&}, CopyToClipboard @ Cell[StripBoxes @ BoxData[Replace[Slot[i], DynamicBox[x_]:>x]], "Input"]]
 }]
 
 (* A lightweight stack *)	
@@ -148,14 +135,20 @@ pop[]:=(stack=#;#2)&@@stack
 	
 (* Use an explicit RowBox instead of Row so that StripBoxes will 
  * strip the indenting *)
-indented /: MakeBoxes[indented[n_, e_], fmt_] := RowBox[{
-	ToBoxes[Indent[n]],
-	MakeBoxes[e,fmt]
-}]
+indented /: MakeBoxes[indented[n_, i_String, e_], fmt_] := With[{boxes = MakeBoxes[e, fmt]},
+	If[n < 1,
+		boxes,
+		RowBox[{
+			StringRepeat[i, n],
+			"\[InvisibleSpace]",
+			boxes
+		}]
+	]
+]
 
 (* The output should show Sequence objects, and I replace "" with "\"\""
  * so that empty strings are visible and selectable *)
-SetAttributes[visibleForm,SequenceHold]
+SetAttributes[visibleForm, {SequenceHold}]
 visibleForm /: MakeBoxes[visibleForm[""], fmt_] := StyleBox[
 	"\"\"",
 	ShowStringCharacters->True
@@ -164,12 +157,15 @@ visibleForm /: MakeBoxes[visibleForm[u_], fmt_] := MakeBoxes[u,fmt]
 
 (* add TPE styles to evaluation notebook stylesheet *)
 
-styles = Table[
-	Cell[StyleData["TPE"<>ToString[n]],
-		CellContext->Cell,
-		TemplateBoxOptions->{DisplayFunction->TPEDisplayFunction[n]}
+styles = Append[
+	Table[
+		Cell[StyleData["TPE"<>ToString[n]],
+			CellContext->Cell,
+			TemplateBoxOptions->{DisplayFunction->TPEDisplayFunction[n]}
+		],
+		{n, 7}
 	],
-	{n, 7}
+	Cell[StyleData["PersistentOutput", StyleDefinitions->StyleData["Output"]]]
 ]
 
 If[CurrentValue[EvaluationNotebook[], {StyleDefinitions, "TPE2"}] === {},
@@ -178,12 +174,12 @@ If[CurrentValue[EvaluationNotebook[], {StyleDefinitions, "TPE2"}] === {},
 		StyleDefinitions -> Replace[CurrentValue[EvaluationNotebook[], StyleDefinitions],
 			{
 			Notebook[oldcells_, r__] :> Notebook[Join[oldcells, styles], r],
-			other_ :> Notebook[Prepend[styles, Cell[StyleDefinitions->other]]]
+			other_ :> Notebook[Prepend[styles, Cell[StyleData[StyleDefinitions->other]]], StyleDefinitions -> "PrivateStylesheetFormatting.nb"]
 			}
 		]
 	]
 ]
-	
+
 End[]
 
 EndPackage[]
