@@ -87,7 +87,10 @@ TracePrintEvaluate[expr_, form_, opts:OptionsPattern[]] := Module[
 					TraceInternal->OptionValue[TraceInternal]
 				];
 				
-				RawBoxes @ "\[Bullet]",
+				Tooltip[
+					RawBoxes @ "\[Bullet]",
+					"TracePrintEvaluate data"
+				],
 				Initialization :> (values = vv; timing = tt; outAction = oo)
 			];
 
