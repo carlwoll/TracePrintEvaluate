@@ -87,7 +87,7 @@ TracePrintEvaluate[expr_, form_, opts:OptionsPattern[]] := Module[
 					TraceInternal->OptionValue[TraceInternal]
 				];
 				
-				RawBoxes @ "\[Bullet]",
+				"\[Bullet]",
 				Initialization :> (values = vv; timing = tt; outAction = oo)
 			];
 
@@ -95,7 +95,6 @@ TracePrintEvaluate[expr_, form_, opts:OptionsPattern[]] := Module[
 				CellPrint @ Cell[
 					BoxData @ ToBoxes @ res,
 					"PersistentOutput",
-					CellMargins -> CurrentValue[{StyleDefinitions, "Output", CellMargins}],
 					CellLabel -> "Out["<>ToString[$Line]<>"]=",
 					CellDingbat -> Cell @ BoxData @ ToBoxes @ r
 				];
@@ -113,10 +112,7 @@ ToggleSelector /: MakeBoxes[ToggleSelector[{in_, out__}, init_Integer:1, Options
 	name = "TPE" <> ToString@Length[Hold[in, out]],
 	inboxes = MakeBoxes[in, fmt],
 	outboxes = ToBoxes /@ Hold[out],
-	df = If[TrueQ @ OptionValue[ToggleSelector, "Stylesheet"] && Length@Hold[in, out]<=5,
-		Sequence@@{},
-		DisplayFunction -> TPEDisplayFunction[Length[{in, out}]]
-	]
+	df = If[TrueQ @ OptionValue[ToggleSelector, "Stylesheet"], Sequence@@{}, DisplayFunction -> TPEDisplayFunction[Length[{in, out}]]]
 	},
 
 	Replace[
@@ -167,7 +163,7 @@ styles = Append[
 			CellContext->Cell,
 			TemplateBoxOptions->{DisplayFunction->TPEDisplayFunction[n]}
 		],
-		{n, 5}
+		{n, 7}
 	],
 	Cell[StyleData["PersistentOutput", StyleDefinitions->StyleData["Output"]]]
 ]
