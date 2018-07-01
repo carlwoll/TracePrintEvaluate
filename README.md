@@ -1,2 +1,2 @@
 # TracePrintEvaluateSource
-TracePrintEvaluate prints evaluations matching a parameter, along with additional information
+TracePrintEvaluate prints evaluations matching a pattern, along with additional information
