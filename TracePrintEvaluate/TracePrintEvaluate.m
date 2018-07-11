@@ -5,7 +5,8 @@ expressions which match \!\(\*StyleBox[\"form\", \"TI\"]\).
 TracePrintEvaluate[\!\(\*StyleBox[\"expr\", \"TI\"]\), \!\(\*StyleBox[\"s\", \"TI\"]\)] includes all evaluations which use \
 transformation rules associated with the symbol \!\(\*StyleBox[\"s\", \"TI\"]\)."
 	
-ToggleSelector::usage = "ToggleSelector[{evaluated, unevaluated..}, initial] toggles starting with initial"
+ToggleSelector::usage = "ToggleSelector[{evaluated, unevaluated..}] is like FlipView, \
+showing different elements when toggled, but also copies the contents when right-click is used"
 
 Begin["`Private`"];
 	
@@ -17,7 +18,7 @@ Options[TracePrintEvaluate] = SortBy[
 			"TraceIn" -> None, (* Side effect function applied to input *)
 			"TraceOut" -> None, (* Side effect function applied to input and output *)
 			"Timing" -> False, (* Whether to show evaluation time *)
-			"Toggler" -> 1, (* Which toggler state to show initially *)
+			"ToggleElements" -> Automatic, (* Which pieces of information to display in the toggler *)
 			TraceInternal -> True,
 			SaveDefinitions -> True
 		}
@@ -30,13 +31,16 @@ SetAttributes[TracePrintEvaluate, {HoldAll, ReadProtected}];
 TracePrintEvaluate[expr_, form_, opts:OptionsPattern[]] := Module[
 	{
 	res, index=0, values, timing, start, outAction,
-	toggle = Replace[OptionValue["Toggler"], Except[_Integer]->1],
+	display = lookup[OptionValue["ToggleElements"]],
 	showtime = TrueQ@OptionValue["Timing"],
 	in = OptionValue["TraceIn"],
 	out = OptionValue["TraceOut"],
-	stylesheet = CurrentValue[{StyleDefinitions, "TPE2"}] =!= {},
+	stylesheet = CurrentValue[{StyleDefinitions, "ToggleSelector"}] =!= {},
 	indent = Replace[OptionValue["TraceIndent"], Except[_String] -> " "]
 	},
+
+	display = DeleteCases[display, Alternatives @@ lookup@Pick[{"Timing", "TraceIn", "TraceOut"}, {!showtime, in===None, out===None}]];
+	If[display === {}, display = {1, 2}];
 
 	Block[{stack = {}},
 		With[
@@ -46,11 +50,10 @@ TracePrintEvaluate[expr_, form_, opts:OptionsPattern[]] := Module[
 					{
 					indented[TraceLevel[]-2, indent, Defer@@#], (* input *)
 					visibleForm @ Dynamic @ values[v], (* output *)
-					If[showtime, Dynamic @ timing[v], Nothing],
-					If[in=!=None, visibleForm @ in[#], Nothing],
-					If[out=!=None, visibleForm @ Dynamic @ outAction[v], Nothing]
-					},
-					toggle,
+					If[showtime, Dynamic @ timing[v], Null],
+					If[in=!=None, visibleForm @ in[#], Null],
+					If[out=!=None, visibleForm @ Dynamic @ outAction[v], Null]
+					}[[display]],
 					"Stylesheet" -> stylesheet
 				];
 				start[v] = AbsoluteTime[]
@@ -87,10 +90,8 @@ TracePrintEvaluate[expr_, form_, opts:OptionsPattern[]] := Module[
 					TraceInternal->OptionValue[TraceInternal]
 				];
 				
-				Tooltip[
-					RawBoxes @ "\[Bullet]",
-					"TracePrintEvaluate data"
-				],
+				RawBoxes @ "\[Bullet]",
+
 				Initialization :> (values = vv; timing = tt; outAction = oo)
 			];
 
@@ -110,31 +111,39 @@ TracePrintEvaluate[expr_, form_, opts:OptionsPattern[]] := Module[
 	]
 ]
 
-Options[ToggleSelector] = {"Stylesheet"->True}
-ToggleSelector /: MakeBoxes[ToggleSelector[{in_, out__}, init_Integer:1, OptionsPattern[]], fmt_] := With[
-	{
-	name = "TPE" <> ToString@Length[Hold[in, out]],
-	inboxes = MakeBoxes[in, fmt],
-	outboxes = ToBoxes /@ Hold[out],
-	df = If[TrueQ @ OptionValue[ToggleSelector, "Stylesheet"] && Length@Hold[in, out]<=5,
-		Sequence@@{},
-		DisplayFunction -> TPEDisplayFunction[Length[{in, out}]]
-	]
-	},
+elementAssociation = <|"In" -> 1, "Out" -> 2, "Timing" -> 3, "TraceIn" -> 4, "TraceOut" -> 5|>
+lookup[All] := Values[elementAssociation]
+lookup[Automatic] := lookup[All]
+lookup[n_List] := DeleteMissing @ Lookup[n][elementAssociation]
+lookup[n_] := lookup[{n}]
 
-	Replace[
-		RotateLeft[Prepend[outboxes, inboxes], init-1],
-		Hold[x__] :> TemplateBox[{x}, name, df]
+Options[ToggleSelector] = {"Stylesheet" -> False}
+
+ToggleSelector /: MakeBoxes[ToggleSelector[{a__}, OptionsPattern[]], fmt_] := TemplateBox[
+	BoxForm`ListMakeBoxes[{a}, fmt],
+	"ToggleSelector",
+	If[TrueQ @ OptionValue[ToggleSelector, "Stylesheet"],
+		Sequence @@ {},
+		DisplayFunction -> $OverlayDisplayFunction
 	]
 ]
 
-TPEDisplayFunction[n_] := With[{toggles = Table[i -> TagBox[Slot[i], event[i]], {i, n}]},
-	Function @ TogglerBox[1, toggles, ImageSize->Automatic]
-]
-
-event[i_] := EventHandlerTag[{
-	{"MouseClicked", 2} :> Block[{System`TemplateArgBox = #&}, CopyToClipboard @ Cell[StripBoxes @ BoxData[Replace[Slot[i], DynamicBox[x_]:>x]], "Input"]]
-}]
+$OverlayDisplayFunction = DynamicModuleBox[{i = 1, s = {TemplateSlotSequence[1]}}, 
+	TagBox[
+		OverlayBox[{TemplateSlotSequence[1]}, {i}, i], 
+			EventHandlerTag[{
+			{"MouseClicked", 1} :> {i = Mod[i + 1, Length[s], 1]},
+			{"MouseClicked", 2} :> {
+				Block[{System`TemplateArgBox = #&},
+					CopyToClipboard @ Cell[
+						StripBoxes @ BoxData @ If[MatchQ[s[[i]],_DynamicBox], s[[i,1]], s[[i]]],
+						"Input"
+					]
+				]
+			}
+		}]
+	]
+]&
 
 (* A lightweight stack *)	
 push[x_]:=Last[stack={stack,x}]
@@ -164,23 +173,18 @@ visibleForm /: MakeBoxes[visibleForm[u_], fmt_] := MakeBoxes[u,fmt]
 
 (* add TPE styles to evaluation notebook stylesheet *)
 
-styles = Append[
-	Table[
-		Cell[StyleData["TPE"<>ToString[n]],
-			CellContext->Cell,
-			TemplateBoxOptions->{DisplayFunction->TPEDisplayFunction[n]}
-		],
-		{n, 5}
-	],
-	Cell[StyleData["PersistentOutput", StyleDefinitions->StyleData["Output"]]]
+styles = Cell[StyleData["ToggleSelector"],
+	TemplateBoxOptions->{
+		DisplayFunction->$OverlayDisplayFunction
+	}
 ]
 
-If[CurrentValue[EvaluationNotebook[], {StyleDefinitions, "TPE2"}] === {},
+If[CurrentValue[EvaluationNotebook[], {StyleDefinitions, "ToggleSelector"}] === {},
 	SetOptions[
 		EvaluationNotebook[],
 		StyleDefinitions -> Replace[CurrentValue[EvaluationNotebook[], StyleDefinitions],
 			{
-			Notebook[oldcells_, r__] :> Notebook[Join[oldcells, styles], r],
+			Notebook[oldcells_, r__] :> Notebook[Join[oldcells, {styles}], r],
 			other_ :> Notebook[Prepend[styles, Cell[StyleData[StyleDefinitions->other]]], StyleDefinitions -> "PrivateStylesheetFormatting.nb"]
 			}
 		]
