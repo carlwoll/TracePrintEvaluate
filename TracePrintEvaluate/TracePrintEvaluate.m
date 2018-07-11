@@ -173,18 +173,19 @@ visibleForm /: MakeBoxes[visibleForm[u_], fmt_] := MakeBoxes[u,fmt]
 
 (* add TPE styles to evaluation notebook stylesheet *)
 
-styles = Cell[StyleData["ToggleSelector"],
-	TemplateBoxOptions->{
-		DisplayFunction->$OverlayDisplayFunction
-	}
-]
+styles = {
+	Cell[StyleData["ToggleSelector"],
+		TemplateBoxOptions->{DisplayFunction->$OverlayDisplayFunction}
+	],
+	Cell[StyleData["PersistentOutput", StyleDefinitions->StyleData["Output"]]]
+}
 
 If[CurrentValue[EvaluationNotebook[], {StyleDefinitions, "ToggleSelector"}] === {},
 	SetOptions[
 		EvaluationNotebook[],
 		StyleDefinitions -> Replace[CurrentValue[EvaluationNotebook[], StyleDefinitions],
 			{
-			Notebook[oldcells_, r__] :> Notebook[Join[oldcells, {styles}], r],
+			Notebook[oldcells_, r__] :> Notebook[Join[oldcells, styles], r],
 			other_ :> Notebook[Prepend[styles, Cell[StyleData[StyleDefinitions->other]]], StyleDefinitions -> "PrivateStylesheetFormatting.nb"]
 			}
 		]
